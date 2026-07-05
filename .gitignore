@@ -6,3 +6,4 @@ dist
 
 # business docs (not app code)
 *.pptx
+tsconfig.tsbuildinfo
