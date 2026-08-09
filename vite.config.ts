@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // Ruim — persoonlijke abundance-app. Volledig statisch, geen backend.
 // Alle data blijft op het toestel. Werkt offline als PWA.
-// BASE_PATH laat de app zowel op een subpad (GitHub Pages: /ruim/)
+// BASE_PATH laat de app zowel op een subpad (GitHub Pages: /Ruim/)
 // als op de root (Vercel/Netlify: /) draaien.
 const base = process.env.BASE_PATH || '/'
 
