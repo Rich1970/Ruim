@@ -1,36 +1,50 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { stripeDev } from './server/stripe-dev.mjs'
-import { emailDev } from './server/email-dev.mjs'
-import { aggregatorDev } from './server/aggregator-dev.mjs'
+import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-  return {
-    plugins: [
-      react(),
-      // Dev-only adapters over the shared server/handlers.mjs. In production the
-      // same handlers run as serverless functions (see api/**). They read the
-      // secrets from `env` (loadEnv) here, and from process.env in serverless.
-      stripeDev(env),
-      emailDev(env),
-      aggregatorDev(env),
-    ],
-    server: {
-      host: true,
-      port: 5178,
-      // Allow access via public tunnel hostnames (e.g. *.trycloudflare.com) so the
-      // running app can be shared for viewing & testing.
-      allowedHosts: true,
-      proxy: {
-        // Same-origin proxy to the Transitous / MOTIS open journey-planning API.
-        '/motis': {
-          target: 'https://api.transitous.org',
-          changeOrigin: true,
-          secure: true,
-          rewrite: (p) => p.replace(/^\/motis/, ''),
-        },
+// Ruim — persoonlijke abundance-app. Volledig statisch, geen backend.
+// Alle data blijft op het toestel. Werkt offline als PWA.
+// BASE_PATH laat de app zowel op een subpad (GitHub Pages: /spoorwijs/)
+// als op de root (Vercel/Netlify: /) draaien.
+const base = process.env.BASE_PATH || '/'
+
+export default defineConfig({
+  base,
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Alles is lokaal; geen runtime caching van externe hosts nodig.
+        navigateFallback: '/index.html',
       },
-    },
-  }
+      // start_url/scope niet vastzetten: het plugin leidt ze af van `base`,
+      // zodat het klopt op zowel root als subpad. Icoonpaden zijn relatief.
+      manifest: {
+        name: 'Ruim',
+        short_name: 'Ruim',
+        description: 'Een rustige plek. Eén trede omhoog per keer.',
+        lang: 'nl',
+        dir: 'ltr',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#0a0a0a',
+        theme_color: '#0a0a0a',
+        categories: ['lifestyle', 'health'],
+        icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icon-192-maskable.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: 'icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+    }),
+  ],
+  server: {
+    host: true,
+    port: 5178,
+    allowedHosts: true,
+  },
 })

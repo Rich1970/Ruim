@@ -3,42 +3,72 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background:
-    radial-gradient(1200px 600px at 85% -10%, #e2f2ec 0%, transparent 55%),
-    radial-gradient(900px 500px at -5% 10%, #eaf5f0 0%, transparent 50%),
-    #f6f9f8;
-  color: #0f1a17;
+  background: #0a0a0a;
+  color: #2c2a26;
+  font-family: -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
+  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
 }
 
-@layer components {
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
-           focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700 shadow-sm; }
-  .btn-ghost { @apply btn bg-white text-ink hover:bg-brand-50 border border-brand-100; }
-  .btn-subtle { @apply btn bg-brand-50 text-brand-700 hover:bg-brand-100; }
-  .card { @apply bg-white rounded-2xl shadow-card border border-black/5; }
-  .field {
-    @apply w-full rounded-xl border border-brand-100 bg-white px-3.5 py-3 text-sm text-ink
-           placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent;
-  }
-  .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold; }
-  .label { @apply text-xs font-semibold uppercase tracking-wide text-ink-faint; }
+/* Geen tekstselectie-menu's tijdens de rustige flows */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-/* thin custom scrollbar for horizontal scroll areas */
-.scroll-x { scrollbar-width: thin; }
-.scroll-x::-webkit-scrollbar { height: 6px; }
-.scroll-x::-webkit-scrollbar-thumb { background: #cddfd8; border-radius: 999px; }
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Zachte cirkel — hergebruikt in nacht, adem en revisie */
+.soft-circle {
+  border-radius: 9999px;
+  background: radial-gradient(circle at 50% 45%, #ecd8be 0%, #c4966e 38%, rgba(58, 47, 38, 0.35) 72%, rgba(10, 10, 10, 0) 100%);
+  filter: blur(0.4px);
+}
+
+.veld-fade {
+  animation: fade-in 1.2s ease-out both;
+}
+
+/* Verticale schuif van de emotionele schaal */
+input[type='range'].scale-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+input[type='range'].scale-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  background: #ecd8be;
+  border: 3px solid #b97250;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+input[type='range'].scale-slider::-moz-range-thumb {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  background: #ecd8be;
+  border: 3px solid #b97250;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

@@ -1,51 +1,51 @@
-import React, { useEffect } from 'react'
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
-import { Header, BottomNav } from './components/Header'
-import { ErrorBoundary } from './components/ErrorBoundary'
-import { useSaleWatcher } from './hooks/useSaleAlerts'
-import { Home } from './pages/Home'
-import { Results } from './pages/Results'
-import { JourneyDetail } from './pages/JourneyDetail'
-import { Trips } from './pages/Trips'
-import { Auth } from './pages/Auth'
-import { Account } from './pages/Account'
-import { Cards } from './pages/Cards'
-import { CheckoutSuccess, CheckoutCancel } from './pages/CheckoutReturn'
+import { NavProvider, useNav } from './lib/nav'
+import { Home } from './screens/Home'
+import { Night } from './screens/Night'
+import { Morning } from './screens/Morning'
+import { Evening } from './screens/Evening'
+import { Urgent } from './screens/Urgent'
+import { Play } from './screens/Play'
+import { Abundance } from './screens/Abundance'
+import { Facts } from './screens/Facts'
+import { Settings } from './screens/Settings'
+import { VR } from './screens/VR'
+import { Beliefs } from './screens/Beliefs'
 
-export default function App() {
-  const loc = useLocation()
-  useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
-  useSaleWatcher()
-
-  return (
-    <div className="min-h-full pb-16 sm:pb-0">
-      <Header />
-      <main>
-        <ErrorBoundary>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="/journey" element={<JourneyDetail />} />
-          <Route path="/trips" element={<Trips />} />
-          <Route path="/kortingskaarten" element={<Cards />} />
-          <Route path="/checkout/success" element={<CheckoutSuccess />} />
-          <Route path="/checkout/cancel" element={<CheckoutCancel />} />
-          <Route path="/login" element={<Auth />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        </ErrorBoundary>
-      </main>
-      <Footer />
-      <BottomNav />
-    </div>
-  )
+function Router() {
+  const { screen } = useNav()
+  switch (screen) {
+    case 'night':
+      return <Night />
+    case 'morning':
+      return <Morning />
+    case 'evening':
+      return <Evening />
+    case 'urgent':
+      return <Urgent />
+    case 'play':
+      return <Play />
+    case 'abundance':
+      return <Abundance />
+    case 'facts':
+      return <Facts />
+    case 'settings':
+      return <Settings />
+    case 'vr':
+      return <VR />
+    case 'beliefs':
+      return <Beliefs />
+    case 'home':
+    default:
+      return <Home />
+  }
 }
 
-function Footer() {
+export default function App() {
   return (
-    <footer className="mx-auto max-w-6xl px-4 py-8 text-center text-xs text-ink-faint">
-      Spoorwijs · demo — reisplanner voor treinreizen door de EU & UK. Afrekenen bij de vervoerder.
-    </footer>
+    <NavProvider>
+      <div className="min-h-full">
+        <Router />
+      </div>
+    </NavProvider>
   )
 }
