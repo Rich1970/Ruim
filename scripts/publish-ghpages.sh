@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Bouwt Ruim en werkt de gh-pages branch bij (voor GitHub Pages op /spoorwijs/).
+# Bouwt Ruim en werkt de gh-pages branch bij (voor GitHub Pages op /ruim/).
 # Gebruik: bash scripts/publish-ghpages.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "› Build (subpad /spoorwijs/)…"
-BASE_PATH=/spoorwijs/ npm run build
+echo "› Build (subpad /ruim/)…"
+BASE_PATH=/ruim/ npm run build
 
 TMP="$(mktemp -d)"
 cp -r dist/* "$TMP/"
@@ -23,4 +23,4 @@ git push -f origin gh-pages
 cd - >/dev/null
 git worktree remove "$TMP/ghp" --force || true
 rm -rf "$TMP"
-echo "✓ Gepubliceerd. Live op https://rich1970.github.io/spoorwijs/ (zodra Pages aanstaat)."
+echo "✓ Gepubliceerd. Live op https://rich1970.github.io/ruim/ (zodra Pages aanstaat)."

@@ -8,14 +8,12 @@ telkens één trede tegelijk. Waar sta je nu, en wat is het eerstvolgende trapje
 
 ## De link
 
-👉 **https://rich1970.github.io/spoorwijs/**
-
-(De app heet *Ruim*; hij staat in de bestaande `spoorwijs`-repository, vandaar die naam in het adres.)
+👉 **https://rich1970.github.io/ruim/**
 
 > **Eenmalig aanzetten (±30 seconden, alleen jij kunt dit).**
 > De app is gebouwd, getest en klaargezet op de branch `gh-pages`. Om hem live te
 > zetten hoef je één schakelaar om te zetten in GitHub:
-> 1. Ga naar **github.com/Rich1970/spoorwijs → Settings → Pages**.
+> 1. Ga naar **github.com/Rich1970/ruim → Settings → Pages**.
 > 2. Bij **"Build and deployment" → "Source"** kies **"Deploy from a branch"**.
 > 3. Bij **"Branch"** kies **`gh-pages`** en map **`/ (root)`**, klik **Save**.
 >
@@ -98,7 +96,7 @@ npm run preview   # de build bekijken
 ```
 
 Deploy op GitHub Pages: de `gh-pages` branch bevat de gebouwde site (subpad
-`/spoorwijs/`). Bijwerken na een wijziging: `bash scripts/publish-ghpages.sh`.
+`/ruim/`). Bijwerken na een wijziging: `bash scripts/publish-ghpages.sh`.
 
 Voor een deploy op de root (bijv. Vercel/Netlify) werkt de build zonder `BASE_PATH`;
 `vercel.json` staat klaar. Op Vercel: importeer de repo, het framework (Vite) wordt
