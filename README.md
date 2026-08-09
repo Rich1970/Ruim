@@ -12,6 +12,15 @@ telkens één trede tegelijk. Waar sta je nu, en wat is het eerstvolgende trapje
 
 (De app heet *Ruim*; hij staat in de bestaande `spoorwijs`-repository, vandaar die naam in het adres.)
 
+> **Eenmalig aanzetten (±30 seconden, alleen jij kunt dit).**
+> De app is gebouwd, getest en klaargezet op de branch `gh-pages`. Om hem live te
+> zetten hoef je één schakelaar om te zetten in GitHub:
+> 1. Ga naar **github.com/Rich1970/spoorwijs → Settings → Pages**.
+> 2. Bij **"Build and deployment" → "Source"** kies **"Deploy from a branch"**.
+> 3. Bij **"Branch"** kies **`gh-pages`** en map **`/ (root)`**, klik **Save**.
+>
+> Na ±1 minuut staat de app live op de link hierboven. Dit hoeft maar één keer.
+
 ## Op je iPhone-beginscherm zetten
 
 1. Open de link hierboven in **Safari** (niet in een andere browser).
@@ -88,6 +97,9 @@ npm run build     # productie-build (root); of BASE_PATH=/spoorwijs/ voor GitHub
 npm run preview   # de build bekijken
 ```
 
-Deploy staat op GitHub Pages via `.github/workflows/deploy-pages.yml`.
+Deploy op GitHub Pages: de `gh-pages` branch bevat de gebouwde site (subpad
+`/spoorwijs/`). Bijwerken na een wijziging: `bash scripts/publish-ghpages.sh`.
+
 Voor een deploy op de root (bijv. Vercel/Netlify) werkt de build zonder `BASE_PATH`;
-`vercel.json` staat klaar.
+`vercel.json` staat klaar. Op Vercel: importeer de repo, het framework (Vite) wordt
+automatisch herkend, klaar.
