@@ -127,15 +127,19 @@ export function Settings() {
           </button>
 
           <div className="mt-4 rounded-2xl bg-sand-100 p-4 text-sm text-ink-soft">
-            <p className="mb-1 font-medium text-ink">Een mooiere stem op je iPhone</p>
+            <p className="mb-1 font-medium text-ink">Een mooiere stem op je Android/Samsung</p>
             <p>
-              De standaard-telefoonstem klinkt vaak wat vlak. Download eenmalig een warmere
-              Nederlandse stem, dan kiest de app die vanzelf:
+              De standaard-telefoonstem klinkt vaak wat vlak. Stel eenmalig een warmere
+              Nederlandse stem in, dan kiest de app die vanzelf:
             </p>
             <p className="mt-2">
-              iPhone-<em>Instellingen</em> → <em>Toegankelijkheid</em> → <em>Gesproken materiaal</em> →{' '}
-              <em>Stemmen</em> → <em>Nederlands</em> → kies er een met “Verbeterd” of “Premium” en tik op
-              downloaden. Kom hier daarna terug en kies ’m hierboven (of laat op “automatisch”).
+              <em>Instellingen</em> → <em>Algemeen beheer</em> → <em>Tekst-naar-spraak</em> → kies de{' '}
+              <em>Google tekst-naar-spraak-engine</em> → tik op het tandwiel → <em>Taal/stem</em> →
+              installeer een Nederlandse stem. Open Ruim daarna in <em>Chrome</em>, kom hier terug en
+              kies ’m hierboven (of laat op “automatisch”).
+            </p>
+            <p className="mt-2">
+              Tip: open de app in <em>Chrome</em> — daar werkt de stem én het inspreken het best.
             </p>
             <p className="mt-2">
               Wil je de allermooiste stem? Vul hieronder een ElevenLabs-sleutel in (betaald, optioneel).

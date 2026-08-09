@@ -71,19 +71,17 @@ export function Morning() {
   )
 }
 
-// Segment Intending
+// Segment Intending — zoveel delen als je wilt (typisch 5 tot 7).
 function SegmentIntending({ opts, onDone }: { opts: any; onDone: () => void }) {
   const [sub, setSub] = useState<'name' | 'feel'>('name')
-  const [i, setI] = useState(0)
+  const [i, setI] = useState(0) // index van het deel waar we nu mee bezig zijn
   const [parts, setParts] = useState<string[]>([])
   const [feels, setFeels] = useState<string[]>([])
   const [reading, setReading] = useState(false)
 
-  // Als er (nog) geen woorden zijn, val terug op een natuurlijke omschrijving
-  // in plaats van "stuk 1".
   const partLabel = (p?: string) => (p && p.trim() ? p.trim() : 'dat deel van je dag')
   const nameQuestion = (n: number) =>
-    n === 0 ? SEGMENT_INTRO : n === 1 ? 'En wat komt daarna?' : 'En het laatste deel van je dag?'
+    n === 0 ? SEGMENT_INTRO : 'En het volgende deel van je dag?'
 
   useEffect(() => {
     if (sub === 'name') speak([nameQuestion(i)], opts)
@@ -103,12 +101,14 @@ function SegmentIntending({ opts, onDone }: { opts: any; onDone: () => void }) {
     const nf = [...feels]
     nf[i] = t.trim() || 'rustig'
     setFeels(nf)
-    if (i < 2) {
-      setI(i + 1)
-      setSub('name')
-    } else {
-      readBack(parts, nf)
-    }
+    setI(i + 1) // volgende deel; je stopt zelf met "Klaar"
+    setSub('name')
+  }
+
+  // Ronde af met de delen die je tot nu toe hebt genoemd.
+  function finish() {
+    stopSpeaking()
+    readBack(parts.slice(0, i), feels.slice(0, i))
   }
 
   function readBack(p: string[], f: string[]) {
@@ -122,11 +122,12 @@ function SegmentIntending({ opts, onDone }: { opts: any; onDone: () => void }) {
   }
 
   if (reading) {
+    const done = parts.slice(0, feels.length)
     return (
       <div>
         <Prompt>Je intentie voor vandaag</Prompt>
         <ul className="space-y-3 text-lg text-ink">
-          {parts.map((p, idx) => (
+          {done.map((p, idx) => (
             <li key={idx}>
               In <span className="font-medium">{partLabel(p)}</span> wil je je{' '}
               <span className="font-medium">{feels[idx] || 'rustig'}</span> voelen.
@@ -138,28 +139,48 @@ function SegmentIntending({ opts, onDone }: { opts: any; onDone: () => void }) {
     )
   }
 
+  const completed = parts.slice(0, i) // volledig afgeronde delen (naam + gevoel)
+
   return (
     <div>
       <Prompt>
         {sub === 'name'
           ? i === 0
             ? 'Uit welke stukken bestaat je dag? Noem het eerste deel.'
-            : nameQuestion(i)
+            : 'En het volgende deel van je dag?'
           : `${partLabel(parts[i])} — hoe wil je je daarin voelen?`}
       </Prompt>
+
+      {/* Wat je al genoemd hebt, als geruststelling */}
+      {completed.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {completed.map((p, idx) => (
+            <span key={idx} className="rounded-full bg-sand-100 px-3 py-1 text-sm text-ink-soft">
+              {partLabel(p)} · {feels[idx] || 'rustig'}
+            </span>
+          ))}
+        </div>
+      )}
+
       <VoiceCapture
         key={`${i}-${sub}`}
         autoStart
         onSubmit={sub === 'name' ? submitName : submitFeel}
-        submitLabel={sub === 'feel' && i === 2 ? 'Lees terug' : 'Verder'}
-        placeholder={sub === 'name' ? 'bijv. de ochtend, een gesprek, de avond…' : 'bijv. rustig, scherp, licht…'}
+        submitLabel="Verder"
+        placeholder={sub === 'name' ? 'bijv. de ochtend, een gesprek, de lunch…' : 'bijv. rustig, scherp, licht…'}
         rows={2}
       />
-      <div className="mt-4 flex gap-2">
-        {[0, 1, 2].map((n) => (
-          <div key={n} className={`h-1.5 flex-1 rounded-full ${n <= i ? 'bg-clay-400' : 'bg-sand-200'}`} />
-        ))}
-      </div>
+
+      {/* Afronden mag zodra er minstens één deel af is */}
+      {sub === 'name' && i >= 1 && (
+        <button onClick={finish} className="mt-4 w-full rounded-2xl border border-sand-300 py-3 text-ink-soft">
+          Klaar — lees mijn intentie terug ({i} {i === 1 ? 'deel' : 'delen'})
+        </button>
+      )}
+
+      <p className="mt-4 text-center text-sm text-ink-faint">
+        {sub === 'name' ? `deel ${i + 1}` : `deel ${i + 1} — hoe wil je je voelen?`} · zoveel delen als je wilt
+      </p>
     </div>
   )
 }
