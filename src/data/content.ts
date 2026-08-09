@@ -61,7 +61,7 @@ export const MORNING_INTRO: string[] = [
 ]
 
 export const SEGMENT_INTRO =
-  'Uit welke stukken bestaat je dag? Noem er hardop drie, of tik ze in.'
+  'Uit welke stukken bestaat je dag? Noem het eerste deel, hardop of getikt.'
 
 export const ENTHUSIASM_Q1 =
   'Wat is op dit moment het meest opwindende dat je vandaag zou kunnen doen? Hoe klein ook.'

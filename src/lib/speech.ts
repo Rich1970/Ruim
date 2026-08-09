@@ -69,8 +69,17 @@ function pickVoice(voices: SpeechSynthesisVoice[], preferredName: string): Speec
   }
   const nl = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith('nl'))
   if (nl.length) {
-    // Voorkeur voor een niet-lokale (vaak vollere) stem, anders de eerste.
-    return nl.find((v) => !v.localService) || nl[0]
+    const score = (v: SpeechSynthesisVoice) => {
+      const n = v.name.toLowerCase()
+      let s = 0
+      // Gedownloade/verbeterde iOS-stemmen klinken veel warmer.
+      if (/(enhanced|premium|verbeterd|siri|natural|neural)/.test(n)) s += 6
+      // Bekende, prettigere Nederlandse stemmen.
+      if (/(claire|ellen|femke|lotte|laura|xander)/.test(n)) s += 3
+      if (!v.localService) s += 2 // cloud-stemmen zijn vaak voller
+      return s
+    }
+    return [...nl].sort((a, b) => score(b) - score(a))[0]
   }
   return null
 }

@@ -126,8 +126,24 @@ export function Settings() {
             ▶ test de stem
           </button>
 
+          <div className="mt-4 rounded-2xl bg-sand-100 p-4 text-sm text-ink-soft">
+            <p className="mb-1 font-medium text-ink">Een mooiere stem op je iPhone</p>
+            <p>
+              De standaard-telefoonstem klinkt vaak wat vlak. Download eenmalig een warmere
+              Nederlandse stem, dan kiest de app die vanzelf:
+            </p>
+            <p className="mt-2">
+              iPhone-<em>Instellingen</em> → <em>Toegankelijkheid</em> → <em>Gesproken materiaal</em> →{' '}
+              <em>Stemmen</em> → <em>Nederlands</em> → kies er een met “Verbeterd” of “Premium” en tik op
+              downloaden. Kom hier daarna terug en kies ’m hierboven (of laat op “automatisch”).
+            </p>
+            <p className="mt-2">
+              Wil je de allermooiste stem? Vul hieronder een ElevenLabs-sleutel in (betaald, optioneel).
+            </p>
+          </div>
+
           <label className="mt-4 block text-sm text-ink-soft">
-            ElevenLabs API-key (optioneel — voor een mooiere stem)
+            ElevenLabs API-key (optioneel — voor de mooiste stem)
             <input
               type="password"
               value={s.elevenLabsKey}

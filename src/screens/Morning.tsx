@@ -79,23 +79,29 @@ function SegmentIntending({ opts, onDone }: { opts: any; onDone: () => void }) {
   const [feels, setFeels] = useState<string[]>([])
   const [reading, setReading] = useState(false)
 
+  // Als er (nog) geen woorden zijn, val terug op een natuurlijke omschrijving
+  // in plaats van "stuk 1".
+  const partLabel = (p?: string) => (p && p.trim() ? p.trim() : 'dat deel van je dag')
+  const nameQuestion = (n: number) =>
+    n === 0 ? SEGMENT_INTRO : n === 1 ? 'En wat komt daarna?' : 'En het laatste deel van je dag?'
+
   useEffect(() => {
-    if (i === 0 && sub === 'name') speak([SEGMENT_INTRO], opts)
-    else if (sub === 'name') speak([`En het volgende stuk van je dag?`], opts)
-    else speak([`In dit stuk — hoe wil je je voelen?`], opts)
+    if (sub === 'name') speak([nameQuestion(i)], opts)
+    // De vervolgvraag herhaalt hardop wat je net zei.
+    else speak([`${partLabel(parts[i])}. Hoe wil je je daarin voelen?`], opts)
     return () => stopSpeaking()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i, sub])
 
   function submitName(t: string) {
     const next = [...parts]
-    next[i] = t || `stuk ${i + 1}`
+    next[i] = t.trim()
     setParts(next)
     setSub('feel')
   }
   function submitFeel(t: string) {
     const nf = [...feels]
-    nf[i] = t || 'rustig'
+    nf[i] = t.trim() || 'rustig'
     setFeels(nf)
     if (i < 2) {
       setI(i + 1)
@@ -109,10 +115,10 @@ function SegmentIntending({ opts, onDone }: { opts: any; onDone: () => void }) {
     setReading(true)
     const lines = [
       'Dit is je intentie voor vandaag.',
-      ...p.map((part, idx) => `In ${part} wil je je ${f[idx]} voelen.`),
+      ...p.map((part, idx) => `In ${partLabel(part)} wil je je ${f[idx] || 'rustig'} voelen.`),
       'Zo ga je de dag in.',
     ]
-    speak(lines, { ...opts, gapMs: 2500, onDone: () => {} })
+    speak(lines, { ...opts, gapMs: 2500 })
   }
 
   if (reading) {
@@ -122,8 +128,8 @@ function SegmentIntending({ opts, onDone }: { opts: any; onDone: () => void }) {
         <ul className="space-y-3 text-lg text-ink">
           {parts.map((p, idx) => (
             <li key={idx}>
-              In <span className="font-medium">{p}</span> wil je je{' '}
-              <span className="font-medium">{feels[idx]}</span> voelen.
+              In <span className="font-medium">{partLabel(p)}</span> wil je je{' '}
+              <span className="font-medium">{feels[idx] || 'rustig'}</span> voelen.
             </li>
           ))}
         </ul>
@@ -137,9 +143,9 @@ function SegmentIntending({ opts, onDone }: { opts: any; onDone: () => void }) {
       <Prompt>
         {sub === 'name'
           ? i === 0
-            ? 'Uit welke stukken bestaat je dag? Noem het eerste.'
-            : `En stuk ${i + 1}?`
-          : `In "${parts[i]}" — hoe wil je je voelen?`}
+            ? 'Uit welke stukken bestaat je dag? Noem het eerste deel.'
+            : nameQuestion(i)
+          : `${partLabel(parts[i])} — hoe wil je je daarin voelen?`}
       </Prompt>
       <VoiceCapture
         key={`${i}-${sub}`}
