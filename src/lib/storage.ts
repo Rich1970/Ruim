@@ -89,6 +89,7 @@ export interface Settings {
   satsScenes: string[]
   elevenLabsKey: string
   voiceRate: number
+  voicePitch: number // toonhoogte/warmte (0.8–1.2, standaard 1.0)
   voiceName: string // gekozen browserstem (leeg = auto)
 }
 
@@ -169,6 +170,7 @@ function defaultState(): RuimState {
       satsScenes: [...DEFAULT_SATS_SCENES],
       elevenLabsKey: '',
       voiceRate: 0.85,
+      voicePitch: 1.0,
       voiceName: '',
     },
   }

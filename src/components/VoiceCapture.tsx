@@ -28,11 +28,14 @@ export function VoiceCapture({
   function start() {
     if (!supported) return
     baseRef.current = text ? text + ' ' : ''
-    const h = listen({
-      onResult: (t) => setText((baseRef.current + t).trimStart()),
-      onEnd: () => setListening(false),
-      onError: () => setListening(false),
-    })
+    const h = listen(
+      {
+        onResult: (t) => setText((baseRef.current + t).trimStart()),
+        onEnd: () => setListening(false),
+        onError: () => setListening(false),
+      },
+      { silenceMs: 9000 }, // blijft aan; stopt pas na ~9s stilte of een tik
+    )
     if (h) {
       handleRef.current = h
       setListening(true)
@@ -92,10 +95,16 @@ export function VoiceCapture({
           {submitLabel}
         </button>
       </div>
-      {listening && (
+      {listening ? (
         <p className={`text-center text-sm ${dark ? 'text-night-soft' : 'text-ink-faint'}`}>
-          Ik luister…
+          Ik luister… neem rustig de tijd. Tik op ■ als je klaar bent.
         </p>
+      ) : (
+        supported && (
+          <p className={`text-center text-sm ${dark ? 'text-night-soft/70' : 'text-ink-faint/70'}`}>
+            Tik op 🎤 en spreek op je gemak. De microfoon blijft aan.
+          </p>
+        )
       )}
     </div>
   )

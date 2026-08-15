@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { loadState, saveState, type RuimState } from './storage'
+import { setSpeechDefaults } from './speech'
 
 interface StoreContext {
   state: RuimState
@@ -21,6 +22,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (saveTimer.current) window.clearTimeout(saveTimer.current)
     }
   }, [state])
+
+  // Stem-standaarden doorgeven aan de spraaklaag, zodat elke stem hetzelfde klinkt.
+  useEffect(() => {
+    setSpeechDefaults({
+      rate: state.settings.voiceRate,
+      pitch: state.settings.voicePitch,
+      voiceName: state.settings.voiceName,
+      elevenLabsKey: state.settings.elevenLabsKey,
+    })
+  }, [
+    state.settings.voiceRate,
+    state.settings.voicePitch,
+    state.settings.voiceName,
+    state.settings.elevenLabsKey,
+  ])
 
   function update(fn: (draft: RuimState) => void) {
     setState((prev) => {

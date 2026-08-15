@@ -19,6 +19,14 @@ let sessionId = 0
 let currentAudio: HTMLAudioElement | null = null
 let speaking = false
 
+// Standaardinstellingen voor de stem (uit Instellingen). Zo gebruikt elke
+// speak()-aanroep automatisch de gekozen stem, snelheid en toonhoogte,
+// ook als het aanroepende scherm ze niet expliciet meegeeft.
+const speechDefaults: Partial<SpeakOptions> = {}
+export function setSpeechDefaults(d: Partial<SpeakOptions>): void {
+  Object.assign(speechDefaults, d)
+}
+
 const synth: SpeechSynthesis | null = typeof window !== 'undefined' ? window.speechSynthesis : null
 
 // ElevenLabs multilingual stem (spreekt Nederlands). Alleen gebruikt als er een key is.
@@ -70,13 +78,18 @@ function pickVoice(voices: SpeechSynthesisVoice[], preferredName: string): Speec
   const nl = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith('nl'))
   if (nl.length) {
     const score = (v: SpeechSynthesisVoice) => {
-      const n = v.name.toLowerCase()
+      const n = (v.name + ' ' + (v.voiceURI || '')).toLowerCase()
       let s = 0
-      // Gedownloade/verbeterde iOS-stemmen klinken veel warmer.
-      if (/(enhanced|premium|verbeterd|siri|natural|neural)/.test(n)) s += 6
-      // Bekende, prettigere Nederlandse stemmen.
-      if (/(claire|ellen|femke|lotte|laura|xander)/.test(n)) s += 3
-      if (!v.localService) s += 2 // cloud-stemmen zijn vaak voller
+      // Cloud-/netwerkstemmen (o.a. "Google Nederlands") klinken veel warmer
+      // dan de compacte standaardstem — de grootste sprong in kwaliteit.
+      if (!v.localService) s += 8
+      if (/google/.test(n)) s += 5
+      // Warme, vrouwelijke Nederlandse stemmen.
+      if (/(claire|ellen|femke|fenna|lotte|laura|saskia|lisa|female|vrouw)/.test(n)) s += 4
+      // Verbeterde/natuurlijke stemmen.
+      if (/(enhanced|premium|verbeterd|natural|neural|wavenet)/.test(n)) s += 3
+      // Bekende mannelijke standaardstemmen: iets minder voorkeur.
+      if (/(xander|male|man)/.test(n)) s -= 1
       return s
     }
     return [...nl].sort((a, b) => score(b) - score(a))[0]
@@ -164,8 +177,10 @@ async function speakLineEleven(
  * Lees regels voor, zin voor zin, met stiltes ertussen.
  * Resolvet wanneer alles gesproken is óf wanneer er gestopt wordt.
  */
-export async function speak(lines: string[], opts: SpeakOptions = {}): Promise<void> {
+export async function speak(lines: string[], optsIn: SpeakOptions = {}): Promise<void> {
   stopSpeaking()
+  // Voeg de globale stem-standaarden samen met wat het scherm meegeeft.
+  const opts: SpeakOptions = { ...speechDefaults, ...optsIn }
   const mySession = ++sessionId
   speaking = true
 
@@ -242,54 +257,100 @@ export interface ListenHandle {
   stop: () => void
 }
 
-export function listen(callbacks: {
-  onResult?: (text: string, isFinal: boolean) => void
-  onEnd?: (finalText: string) => void
-  onError?: (err: string) => void
-}): ListenHandle | null {
+export function listen(
+  callbacks: {
+    onResult?: (text: string, isFinal: boolean) => void
+    onEnd?: (finalText: string) => void
+    onError?: (err: string) => void
+  },
+  options: { silenceMs?: number } = {},
+): ListenHandle | null {
   if (!recognitionSupported()) return null
   const w = window as SR
   const Rec = w.SpeechRecognition || w.webkitSpeechRecognition
-  const rec = new Rec()
-  rec.lang = 'nl-NL'
-  rec.interimResults = true
-  rec.continuous = true
-  rec.maxAlternatives = 1
-  let finalText = ''
-  let stopped = false
 
-  rec.onresult = (e: any) => {
-    let interim = ''
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const r = e.results[i]
-      if (r.isFinal) finalText += r[0].transcript + ' '
-      else interim += r[0].transcript
-    }
-    callbacks.onResult?.((finalText + interim).trim(), false)
+  // De browser-herkenning stopt zichzelf na een korte stilte. We houden de
+  // microfoon "aan" door telkens opnieuw te starten, en stoppen pas echt bij:
+  //  - een langere stilte (silenceMs), of
+  //  - een handmatige tik (stop()).
+  const SILENCE = options.silenceMs ?? 8000
+  let rec: any = null
+  let acc = '' // vastgelegde (finale) tekst over herstarts heen
+  let stopped = false
+  let silenceTimer: number | null = null
+  let restartTimer: number | null = null
+
+  const clearTimers = () => {
+    if (silenceTimer) window.clearTimeout(silenceTimer)
+    if (restartTimer) window.clearTimeout(restartTimer)
+    silenceTimer = null
+    restartTimer = null
   }
-  rec.onerror = (e: any) => {
-    callbacks.onError?.(e.error || 'error')
+
+  const armSilence = () => {
+    if (silenceTimer) window.clearTimeout(silenceTimer)
+    silenceTimer = window.setTimeout(finish, SILENCE)
   }
-  rec.onend = () => {
-    if (!stopped) {
-      // Sommige browsers stoppen vanzelf; laat de gebruiker het beheren.
-      callbacks.onEnd?.(finalText.trim())
-    }
-  }
-  try {
-    rec.start()
-  } catch {
-    return null
-  }
-  return {
-    stop: () => {
-      stopped = true
-      try {
+
+  function finish() {
+    if (stopped) return
+    stopped = true
+    clearTimers()
+    try {
+      if (rec) {
+        rec.onend = null
         rec.stop()
-      } catch {
-        /* ignore */
       }
-      callbacks.onEnd?.(finalText.trim())
-    },
+    } catch {
+      /* ignore */
+    }
+    callbacks.onEnd?.(acc.trim())
   }
+
+  function startRec() {
+    if (stopped) return
+    rec = new Rec()
+    rec.lang = 'nl-NL'
+    rec.interimResults = true
+    rec.continuous = true
+    rec.maxAlternatives = 1
+
+    rec.onresult = (e: any) => {
+      let interim = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i]
+        if (r.isFinal) acc += r[0].transcript + ' '
+        else interim += r[0].transcript
+      }
+      callbacks.onResult?.((acc + interim).trim(), false)
+      armSilence() // bij elk geluid: de stilte-teller opnieuw starten
+    }
+    rec.onerror = (e: any) => {
+      const err = e?.error || 'error'
+      // Deze zijn normaal (stilte / herstart) — laat de mic aanblijven.
+      if (err === 'no-speech' || err === 'aborted' || err === 'network') return
+      callbacks.onError?.(err)
+      if (err === 'not-allowed' || err === 'service-not-allowed') finish()
+    }
+    rec.onend = () => {
+      if (stopped) return
+      // Engine stopte vanzelf; snel opnieuw starten zodat de mic aan blijft.
+      restartTimer = window.setTimeout(() => {
+        try {
+          startRec()
+        } catch {
+          finish()
+        }
+      }, 200)
+    }
+    try {
+      rec.start()
+    } catch {
+      /* kan 'already started' gooien; genegeerd */
+    }
+  }
+
+  startRec()
+  armSilence()
+  return { stop: finish }
 }
