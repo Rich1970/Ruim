@@ -37,34 +37,34 @@ button, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
-.top .wrap { padding-block: 12px 10px; display: flex; flex-direction: column; gap: 10px; }
+.top .wrap { padding-block: 6px 6px; display: flex; flex-direction: column; gap: 6px; }
 .searchrow { display: flex; gap: 8px; align-items: stretch; }
-#q { flex: 1; min-width: 0; height: 56px; padding: 0 16px; font-size: 24px; font-weight: 500; letter-spacing: .01em;
+#q { flex: 1; min-width: 0; height: 42px; padding: 0 12px; font-size: 19px; font-weight: 500; letter-spacing: .01em;
   background: var(--surface); border: 2px solid var(--line); border-radius: 6px; }
 #q:focus { outline: none; border-color: var(--accent); }
-#q::placeholder { color: var(--muted); font-weight: 400; font-size: 18px; }
-#clear { width: 56px; border: 2px solid var(--line); background: var(--surface); border-radius: 6px; font-size: 22px; cursor: pointer; color: var(--muted); }
-.meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+#q::placeholder { color: var(--muted); font-weight: 400; font-size: 15px; }
+#clear { width: 42px; border: 2px solid var(--line); background: var(--surface); border-radius: 6px; font-size: 20px; cursor: pointer; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-bottom: 14px; }
 .meta .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 14px; cursor: pointer; color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 #count { margin-left: auto; font-family: var(--font-data); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 main.wrap { padding-block: 0 24px; }
-#notice { margin: 12px 0 0; padding: 10px 12px; border: 1px dashed var(--muted); border-radius: 6px; font-size: 14px; color: var(--muted); }
+#notice { margin: 0; padding: 8px 0 0; font-size: 13px; color: var(--muted); }
 #list { list-style: none; margin: 0; padding: 0; }
-.row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); }
 .who { flex: 1; min-width: 0; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
-.name { font-size: 17px; font-weight: 500; overflow-wrap: anywhere; }
-.sub { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.name { font-size: 15px; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
+.sub { font-size: 12px; line-height: 1.25; color: var(--muted); overflow-wrap: anywhere; }
 .sub .num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
 mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 2px; padding: 0 1px; }
 .acts { display: flex; gap: 6px; flex: none; }
-.act { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 6px; text-decoration: none; border: 1.5px solid transparent; }
-.act svg { width: 22px; height: 22px; }
+.act { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 6px; text-decoration: none; border: 1.5px solid transparent; }
+.act svg { width: 19px; height: 19px; }
 .act.call { background: var(--accent); color: var(--accent-ink); }
 .act.wa { background: var(--wa); color: var(--wa-ink); }
-.act.li { border-color: var(--accent); color: var(--accent); font-weight: 600; font-size: 18px; font-family: var(--font-body); }
+.act.li { border-color: var(--accent); color: var(--accent); font-weight: 600; font-size: 15px; font-family: var(--font-body); }
 .act.li.zoek { border-style: dashed; border-color: var(--muted); color: var(--muted); }
 .act.off { visibility: hidden; }
 .more { padding: 4px 0 12px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
@@ -72,7 +72,8 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
 .more .tag { color: var(--muted); min-width: 64px; }
 .more .val { font-family: var(--font-data); user-select: all; overflow-wrap: anywhere; }
 .mini { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer; text-decoration: none; color: var(--ink); }
-#tail { padding: 14px 0; color: var(--muted); font-size: 14px; }
+#tail { padding: 8px 0 0; color: var(--muted); font-size: 13px; }
+#tail:empty { display: none; }
 
 .setup { margin-top: 24px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 .setup h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; text-wrap: balance; }
@@ -89,9 +90,18 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
 <header class="top">
   <div class="wrap">
     <div class="searchrow">
-      <input id="q" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="Typ een letter…" aria-label="Zoek contact">
+      <input id="q" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" autofocus placeholder="Typ een letter…" aria-label="Zoek contact">
       <button id="clear" type="button" aria-label="Wis zoekveld" title="Wis">×</button>
     </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <ul id="list"></ul>
+  <div id="tail"></div>
+  <p id="notice" hidden>Dit zijn voorbeeldcontacten. Laad hieronder je eigen contacten in.</p>
+
+  <section class="setup" id="setup">
     <div class="meta">
       <span class="lbl">Zoek op</span>
       <button class="chip" type="button" id="f-first" data-f="first" aria-pressed="true">Voornaam</button>
@@ -99,15 +109,6 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
       <button class="chip" type="button" id="f-org" data-f="org" aria-pressed="true">Bedrijf</button>
       <span id="count" aria-live="polite"></span>
     </div>
-  </div>
-</header>
-
-<main class="wrap">
-  <p id="notice" hidden>Dit zijn voorbeeldcontacten. Laad onderaan je eigen contacten in.</p>
-  <ul id="list"></ul>
-  <div id="tail"></div>
-
-  <section class="setup" id="setup">
     <h2 id="setup-title">Je eigen contacten inladen</h2>
     <p id="setup-state"></p>
     <ol>
@@ -377,6 +378,12 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
   var stored = null;
   try { stored = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
   if (stored && stored.length) setContacts(stored, false); else setContacts(SAMPLE, true);
-  if (matchMedia('(pointer: fine)').matches) q.focus();
+  // meteen typen: veld krijgt altijd de focus, ook bij terugkomen en bij typen naast het veld
+  function grab() { if (document.activeElement !== q) q.focus({ preventScroll: true }); }
+  grab(); setTimeout(grab, 300);
+  window.addEventListener('focus', grab);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) grab(); });
+  document.addEventListener('keydown', function (e) { if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) grab(); });
+  document.addEventListener('click', function (e) { if (!e.target.closest('a,button,input,label,.val')) grab(); });
 })();
 </script>
