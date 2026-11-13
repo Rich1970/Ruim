@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1257c9">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Snelbel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: één kolom als een adresboek. Zoekveld plakt bovenaan, daaronder een strakke lijst die per letter krimpt. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #131a24;
+  --muted: #5d6877;
+  --line: #dce1e8;
+  --accent: #1257c9;
+  --accent-ink: #ffffff;
+  --hit: #dbe8ff;
+  --wa: #128a48;
+  --wa-ink: #ffffff;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1118; --surface: #151c26; --ink: #e9eef5; --muted: #93a0b2; --line: #26303d;
+    --accent: #5b9bff; --accent-ink: #06101f; --hit: #1c3560; --wa: #35c476; --wa-ink: #04170c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1118; --surface: #151c26; --ink: #e9eef5; --muted: #93a0b2; --line: #26303d;
+  --accent: #5b9bff; --accent-ink: #06101f; --hit: #1c3560; --wa: #35c476; --wa-ink: #04170c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.4; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+.top .wrap { padding-block: 6px 6px; display: flex; flex-direction: column; gap: 6px; }
+.searchrow { display: flex; gap: 8px; align-items: stretch; }
+#q { flex: 1; min-width: 0; height: 42px; padding: 0 12px; font-size: 19px; font-weight: 500; letter-spacing: .01em;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 6px; }
+#q:focus { outline: none; border-color: var(--accent); }
+#q::placeholder { color: var(--muted); font-weight: 400; font-size: 15px; }
+#clear { width: 42px; border: 2px solid var(--line); background: var(--surface); border-radius: 6px; font-size: 20px; cursor: pointer; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-bottom: 14px; }
+.meta .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 14px; cursor: pointer; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+#count { margin-left: auto; font-family: var(--font-data); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+main.wrap { padding-block: 0 24px; }
+#notice { margin: 0; padding: 8px 0 0; font-size: 13px; color: var(--muted); }
+#list { list-style: none; margin: 0; padding: 0; }
+.row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.who { flex: 1; min-width: 0; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.name { font-size: 15px; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
+.sub { font-size: 12px; line-height: 1.25; color: var(--muted); overflow-wrap: anywhere; }
+.sub .num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 2px; padding: 0 1px; }
+.acts { display: flex; gap: 6px; flex: none; }
+.act { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 6px; text-decoration: none; border: 1.5px solid transparent; }
+.act svg { width: 19px; height: 19px; }
+.act.call { background: var(--accent); color: var(--accent-ink); }
+.act.wa { background: var(--wa); color: var(--wa-ink); }
+.act.li { border-color: var(--accent); color: var(--accent); font-weight: 600; font-size: 15px; font-family: var(--font-body); }
+.act.li.zoek { border-style: dashed; border-color: var(--muted); color: var(--muted); }
+.act.off { visibility: hidden; }
+.more { padding: 4px 0 12px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.more .line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; }
+.more .tag { color: var(--muted); min-width: 64px; }
+.more .val { font-family: var(--font-data); user-select: all; overflow-wrap: anywhere; }
+.mini { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer; text-decoration: none; color: var(--ink); }
+#tail { padding: 8px 0 0; color: var(--muted); font-size: 13px; }
+#tail:empty { display: none; }
+
+.setup { margin-top: 24px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.setup h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; text-wrap: balance; }
+.setup p, .setup ol { margin: 0 0 10px; font-size: 14px; color: var(--muted); max-width: 60ch; }
+.setup ol { padding-left: 20px; }
+.setup a { color: var(--accent); }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { display: inline-block; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 6px; padding: 11px 16px; font-weight: 600; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 400; }
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg);
+  padding: 10px 16px; border-radius: 6px; font-size: 14px; z-index: 20; max-width: calc(100% - 32px); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="searchrow">
+      <input id="q" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" autofocus placeholder="Typ een letter…" aria-label="Zoek contact">
+      <button id="clear" type="button" aria-label="Wis zoekveld" title="Wis">×</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <ul id="list"></ul>
+  <div id="tail"></div>
+  <p id="notice" hidden>Dit zijn voorbeeldcontacten. Laad hieronder je eigen contacten in.</p>
+
+  <section class="setup" id="setup">
+    <div class="meta">
+      <span class="lbl">Zoek op</span>
+      <button class="chip" type="button" id="f-first" data-f="first" aria-pressed="true">Voornaam</button>
+      <button class="chip" type="button" id="f-last" data-f="last" aria-pressed="true">Achternaam</button>
+      <button class="chip" type="button" id="f-org" data-f="org" aria-pressed="true">Bedrijf</button>
+      <span id="count" aria-live="polite"></span>
+    </div>
+    <h2 id="setup-title">Je eigen contacten inladen</h2>
+    <p id="setup-state"></p>
+    <ol>
+      <li>Open <a href="https://contacts.google.com/" target="_blank" rel="noopener">Google Contacten</a> en klik links op <b>Exporteren</b>.</li>
+      <li>Kies <b>Google CSV</b> en klik op Exporteren. Het bestand komt in je downloads.</li>
+      <li>Klik hieronder op <b>Bestand kiezen</b> en selecteer dat bestand.</li>
+    </ol>
+    <p>Je contacten blijven op dit apparaat staan en worden nergens heen gestuurd. Een .vcf-bestand uit de Contacten-app van je telefoon werkt ook.</p>
+    <div class="btnrow">
+      <label class="btn" for="file">Bestand kiezen</label>
+      <input id="file" type="file" accept=".csv,.vcf,text/csv,text/vcard,text/x-vcard" hidden>
+      <button class="btn ghost" type="button" id="wipe" hidden>Contacten wissen</button>
+      <button class="btn ghost" type="button" id="wipe-yes" hidden>Ja, wis alles</button>
+    </div>
+  </section>
+</main>
+<div id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'snelbel.contacts.v1', FKEY = 'snelbel.fields.v1', MAX = 80;
+  var SAMPLE = [
+    { first: 'Richard', last: 'de Vries', org: 'Voorbeeld BV', phones: [{ l: 'Mobiel', v: '06 12345678' }], li: '' },
+    { first: 'Rik', last: 'Janssen', org: 'Rijnmond Advies', phones: [{ l: 'Mobiel', v: '+31 6 23456789' }, { l: 'Werk', v: '010 1234567' }], li: 'https://www.linkedin.com/in/voorbeeld' },
+    { first: 'Rianne', last: 'Bakker', org: '', phones: [{ l: 'Mobiel', v: '06 34567890' }], li: '' },
+    { first: 'Anna', last: 'van Rijn', org: 'Studio Noord', phones: [{ l: 'Mobiel', v: '06 45678901' }], li: '' },
+    { first: 'Pieter', last: 'Smit', org: 'Ricoh Nederland', phones: [{ l: 'Werk', v: '020 7654321' }], li: '' },
+    { first: 'Sanne', last: 'Visser', org: 'Bakkerij Visser', phones: [{ l: 'Mobiel', v: '06 56789012' }], li: '' },
+    { first: 'Mohamed', last: 'El Amrani', org: 'Delta Logistiek', phones: [{ l: 'Mobiel', v: '06 67890123' }], li: '' },
+    { first: 'Lotte', last: 'Richter', org: '', phones: [{ l: 'Mobiel', v: '06 78901234' }], li: '' }
+  ];
+  var $ = function (id) { return document.getElementById(id); };
+  var q = $('q'), list = $('list'), tail = $('tail'), count = $('count');
+  var contacts = [], isSample = true, open = null;
+  var fields = { first: true, last: true, org: true };
+
+  function norm(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function words(s) { return norm(s).split(/[^a-z0-9]+/).filter(Boolean); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  function prep(c) {
+    c.name = [c.first, c.last].filter(Boolean).join(' ') || c.org || '(geen naam)';
+    c.sort = norm(c.name);
+    c.w = { first: words(c.first), last: words(c.last), org: words(c.org) };
+    // volledige velden tellen ook mee, zodat "van r" Van Rijn vindt
+    c.full = { first: norm(c.first), last: norm(c.last), org: norm(c.org) };
+    var p = c.phones || [], best = 0;
+    for (var i = 0; i < p.length; i++) { if (/mob|cell|gsm/i.test(p[i].l) || /^316/.test(waNum(p[i].v))) { best = i; break; } }
+    c.main = p[best] || null;
+    return c;
+  }
+  function setContacts(arr, sample) {
+    contacts = arr.map(prep).sort(function (a, b) { return a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0; });
+    isSample = sample;
+    $('notice').hidden = !sample;
+    $('wipe').hidden = sample; $('wipe-yes').hidden = true;
+    $('setup-title').textContent = sample ? 'Je eigen contacten inladen' : 'Contacten bijwerken';
+    $('setup-state').textContent = sample ? 'Nu staan er alleen voorbeelden in.' : contacts.length + ' contacten staan op dit apparaat. Een nieuw bestand vervangt de lijst.';
+    render();
+  }
+  function save(raw) { try { localStorage.setItem(KEY, JSON.stringify(raw)); return true; } catch (e) { return false; } }
+  function strip(c) { return { first: c.first, last: c.last, org: c.org, phones: c.phones, li: c.li, mail: c.mail || '' }; }
+
+  function telNum(v) { return (v || '').replace(/[^\d+]/g, ''); }
+  function waNum(v) {
+    var d = telNum(v);
+    if (d[0] === '+') return d.slice(1).replace(/\D/g, '');
+    d = d.replace(/\D/g, '');
+    if (d.slice(0, 2) === '00') return d.slice(2);
+    if (d[0] === '0') return '31' + d.slice(1);
+    return d;
+  }
+
+  function matches(c, terms) {
+    for (var t = 0; t < terms.length; t++) {
+      var term = terms[t], hit = false;
+      for (var f in fields) {
+        if (!fields[f]) continue;
+        if (c.full[f].indexOf(term) === 0) { hit = true; break; }
+        var w = c.w[f];
+        for (var i = 0; i < w.length; i++) if (w[i].indexOf(term) === 0) { hit = true; break; }
+        if (hit) break;
+      }
+      if (!hit) return false;
+    }
+    return true;
+  }
+  function hl(text, terms, on) {
+    if (!on || !terms.length || !text) return esc(text || '');
+    return text.split(/([^\p{L}\p{N}]+)/u).map(function (part) {
+      var n = norm(part);
+      for (var i = 0; i < terms.length; i++) {
+        if (n.indexOf(terms[i]) === 0 && n.length === part.length) {
+          var k = terms[i].length;
+          return '<mark>' + esc(part.slice(0, k)) + '</mark>' + esc(part.slice(k));
+        }
+      }
+      return esc(part);
+    }).join('');
+  }
+
+  var IC_CALL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
+  var IC_WA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.1-5.7A8.4 8.4 0 1 1 21 11.5z"/><path d="M9 9.5c0 3 2.500 5.500 5.500 5.500"/></svg>';
+
+  function liHref(c) { return c.li || 'https://www.linkedin.com/search/results/people/?keywords=' + encodeURIComponent([c.first, c.last].filter(Boolean).join(' ') || c.org); }
+  function rowHtml(c, i, terms) {
+    var m = c.main, sub = [];
+    if (c.org && c.name !== c.org) sub.push(hl(c.org, terms, fields.org));
+    if (m) sub.push('<span class="num">' + esc(m.v) + '</span>');
+    var extra = (c.phones.length > 1) ? ' <span aria-hidden="true">+' + (c.phones.length - 1) + '</span>' : '';
+    var nameHtml = (c.first || c.last)
+      ? [hl(c.first, terms, fields.first), hl(c.last, terms, fields.last)].filter(Boolean).join(' ')
+      : hl(c.name, terms, fields.org);
+    var h = '<li><div class="row"><button type="button" class="who" data-i="' + i + '" aria-expanded="' + (open === i) + '"><div class="name">' + nameHtml + '</div><div class="sub">' + sub.join(' · ') + extra + '</div></button><div class="acts">';
+    h += m ? '<a class="act call" href="tel:' + esc(telNum(m.v)) + '" aria-label="Bel ' + esc(c.name) + '" title="Bel">' + IC_CALL + '</a>'
+           + '<a class="act wa" href="https://wa.me/' + waNum(m.v) + '" target="_blank" rel="noopener" aria-label="WhatsApp ' + esc(c.name) + '" title="WhatsApp">' + IC_WA + '</a>'
+           : '<span class="act off"></span><span class="act off"></span>';
+    h += '<a class="act li' + (c.li ? '' : ' zoek') + '" href="' + esc(liHref(c)) + '" target="_blank" rel="noopener" aria-label="' + (c.li ? 'LinkedIn-profiel van ' : 'Zoek op LinkedIn: ') + esc(c.name) + '" title="' + (c.li ? 'LinkedIn-profiel' : 'Zoek op LinkedIn') + '">in</a></div></div>';
+    if (open === i) {
+      h += '<div class="more">';
+      c.phones.forEach(function (p) {
+        h += '<div class="line"><span class="tag">' + esc(p.l || 'Nummer') + '</span><span class="val">' + esc(p.v) + '</span>'
+          + '<a class="mini" href="tel:' + esc(telNum(p.v)) + '">Bel</a><a class="mini" href="https://wa.me/' + waNum(p.v) + '" target="_blank" rel="noopener">WhatsApp</a>'
+          + '<button type="button" class="mini" data-copy="' + esc(p.v) + '">Kopieer</button></div>';
+      });
+      if (c.mail) h += '<div class="line"><span class="tag">E-mail</span><span class="val">' + esc(c.mail) + '</span><button type="button" class="mini" data-copy="' + esc(c.mail) + '">Kopieer</button></div>';
+      if (!c.li) h += '<div class="line"><span class="tag">LinkedIn</span><span>Geen profiel opgeslagen. De knop zoekt op naam.</span></div>';
+      h += '</div>';
+    }
+    return h + '</li>';
+  }
+  function render() {
+    var terms = words(q.value), out = [], n = 0;
+    for (var i = 0; i < contacts.length; i++) {
+      if (!matches(contacts[i], terms)) continue;
+      if (n < MAX) out.push(rowHtml(contacts[i], i, terms));
+      n++;
+    }
+    list.innerHTML = out.join('');
+    count.textContent = n + ' van ' + contacts.length;
+    tail.textContent = n === 0 ? 'Niemand gevonden. Haal een letter weg of zet hierboven een zoekveld aan.'
+      : n > MAX ? 'Nog ' + (n - MAX) + ' contacten. Typ een letter erbij om de lijst korter te maken.' : '';
+  }
+
+  /* ---------- inlezen ---------- */
+  function parseCSV(text) {
+    var first = text.slice(0, text.indexOf('\n') + 1 || text.length);
+    var d = (first.split(';').length > first.split(',').length) ? ';' : ',';
+    var rows = [], row = [], cur = '', inq = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (inq) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else inq = false; } else cur += ch; }
+      else if (ch === '"') inq = true;
+      else if (ch === d) { row.push(cur); cur = ''; }
+      else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+      else if (ch !== '\r') cur += ch;
+    }
+    if (cur || row.length) { row.push(cur); rows.push(row); }
+    return rows;
+  }
+  function fromCSV(text) {
+    var rows = parseCSV(text.replace(/^﻿/, '')), H = (rows.shift() || []).map(function (h) { return h.trim().toLowerCase(); });
+    var col = function (names) { for (var i = 0; i < names.length; i++) { var k = H.indexOf(names[i]); if (k >= 0) return k; } return -1; };
+    var cF = col(['first name', 'given name', 'voornaam']), cM = col(['middle name', 'additional name']), cL = col(['last name', 'family name', 'achternaam']);
+    var cN = col(['name', 'display name', 'naam']), cO = col(['organization name', 'organization 1 - name', 'company', 'bedrijf']);
+    var ph = [], web = [], mail = [];
+    H.forEach(function (h, i) {
+      var m;
+      if ((m = /^phone (\d+) - value$/.exec(h))) ph.push({ v: i, l: H.indexOf('phone ' + m[1] + ' - label') > -1 ? H.indexOf('phone ' + m[1] + ' - label') : H.indexOf('phone ' + m[1] + ' - type') });
+      else if (/phone$/.test(h) || /^telefoon|^mobiel/.test(h)) ph.push({ v: i, l: -1, name: h.replace(/ phone$/, '') });
+      else if (/^website \d+ - value$/.test(h) || h === 'web page' || /^custom field \d+ - value$/.test(h)) web.push(i);
+      else if (/^e-mail \d+ - value$/.test(h) || h === 'e-mail address' || h === 'email') mail.push(i);
+    });
+    var out = [];
+    rows.forEach(function (r) {
+      var g = function (i) { return i >= 0 ? (r[i] || '').trim() : ''; };
+      var c = { first: [g(cF), g(cM)].filter(Boolean).join(' '), last: g(cL), org: g(cO), phones: [], li: '', mail: '' };
+      if (!c.first && !c.last && g(cN)) { var parts = g(cN).split(/\s+/); c.first = parts.shift(); c.last = parts.join(' '); }
+      ph.forEach(function (p) {
+        g(p.v).split(':::').forEach(function (v) { v = v.trim(); if (v) c.phones.push({ l: nlLabel(p.l >= 0 ? g(p.l) : p.name), v: v }); });
+      });
+      web.forEach(function (i) { g(i).split(':::').forEach(function (v) { if (!c.li && /linkedin\.com/i.test(v)) c.li = fixUrl(v.trim()); }); });
+      mail.forEach(function (i) { if (!c.mail) c.mail = g(i).split(':::')[0].trim(); });
+      out.push(c);
+    });
+    return out;
+  }
+  function fromVCF(text) {
+    var out = [];
+    text.replace(/\r\n?/g, '\n').replace(/=\n/g, '').replace(/\n[ \t]/g, '').split(/BEGIN:VCARD/i).slice(1).forEach(function (card) {
+      var c = { first: '', last: '', org: '', phones: [], li: '', mail: '' }, fn = '';
+      card.split('\n').forEach(function (line) {
+        var k = line.indexOf(':'); if (k < 0) return;
+        var head = line.slice(0, k).toUpperCase(), val = line.slice(k + 1).trim();
+        if (/QUOTED-PRINTABLE/.test(head)) { try { val = decodeURIComponent(val.replace(/%/g, '%25').replace(/=([0-9A-F]{2})/gi, '%$1')); } catch (e) {} }
+        var prop = head.split(';')[0].replace(/^[^.]*\./, '');
+        var un = function (s) { return s.replace(/\\([,;:])/g, '$1').replace(/\\n/gi, ' ').trim(); };
+        if (prop === 'N') { var p = val.split(/(?<!\\);/); c.last = un(p[0] || ''); c.first = [un(p[1] || ''), un(p[2] || '')].filter(Boolean).join(' '); }
+        else if (prop === 'FN') fn = un(val);
+        else if (prop === 'ORG') c.org = un(val.split(/(?<!\\);/)[0]);
+        else if (prop === 'TEL' && val) c.phones.push({ l: nlLabel((/(CELL|MOBILE|WORK|HOME|MAIN)/.exec(head) || [''])[0]), v: val.replace(/^tel:/i, '') });
+        else if (prop === 'EMAIL' && !c.mail) c.mail = val;
+        else if ((prop === 'URL' || prop === 'X-SOCIALPROFILE') && !c.li && /linkedin\.com/i.test(val)) c.li = fixUrl(un(val));
+      });
+      if (!c.first && !c.last && fn) { var parts = fn.split(/\s+/); c.first = parts.shift(); c.last = parts.join(' '); }
+      out.push(c);
+    });
+    return out;
+  }
+  function nlLabel(l) {
+    l = (l || '').toLowerCase().replace(/^\W+|\W+$/g, '');
+    if (/mob|cell/.test(l)) return 'Mobiel'; if (/work|business|werk/.test(l)) return 'Werk'; if (/home|thuis/.test(l)) return 'Thuis';
+    return l ? l[0].toUpperCase() + l.slice(1) : 'Nummer';
+  }
+  function fixUrl(u) { return /^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^\/+/, ''); }
+  function importText(text) {
+    var arr = /BEGIN:VCARD/i.test(text) ? fromVCF(text) : fromCSV(text);
+    var total = arr.length;
+    arr = arr.filter(function (c) { return c.phones.length && (c.first || c.last || c.org); });
+    if (!arr.length) { toast('Geen contacten met telefoonnummer gevonden in dit bestand. Kies het bestand uit Google Contacten.'); return 0; }
+    var raw = arr.map(strip), ok = save(raw);
+    setContacts(raw, false);
+    toast(arr.length + ' contacten ingeladen' + (total > arr.length ? ' (' + (total - arr.length) + ' zonder telefoonnummer overgeslagen)' : '') + (ok ? '' : '. Opslaan lukte niet, na sluiten moet je opnieuw inladen.'));
+    return arr.length;
+  }
+  window.snelbelImport = importText; // voor testen
+
+  var tt;
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(function () { t.hidden = true; }, 4500); }
+
+  /* ---------- gebeurtenissen ---------- */
+  q.addEventListener('input', function () { open = null; render(); window.scrollTo(0, 0); });
+  $('clear').addEventListener('click', function () { q.value = ''; open = null; render(); q.focus(); });
+  document.querySelectorAll('.chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = b.dataset.f; fields[f] = !fields[f];
+      if (!fields.first && !fields.last && !fields.org) fields[f] = true; // minstens één aan
+      syncChips(); try { localStorage.setItem(FKEY, JSON.stringify(fields)); } catch (e) {}
+      render();
+    });
+  });
+  function syncChips() { document.querySelectorAll('.chip').forEach(function (b) { b.setAttribute('aria-pressed', String(!!fields[b.dataset.f])); }); }
+  list.addEventListener('click', function (e) {
+    var cp = e.target.closest('[data-copy]');
+    if (cp) {
+      var v = cp.dataset.copy;
+      (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () { toast('Gekopieerd: ' + v); }, function () { toast('Kopiëren lukte niet. Houd het nummer ingedrukt om het te selecteren.'); });
+      return;
+    }
+    var w = e.target.closest('.who');
+    if (w) { var i = +w.dataset.i; open = open === i ? null : i; render(); }
+  });
+  $('file').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function () { q.value = ''; open = null; importText(String(r.result)); e.target.value = ''; q.focus(); };
+    r.onerror = function () { toast('Het bestand kon niet worden gelezen. Probeer het opnieuw.'); };
+    r.readAsText(f);
+  });
+  $('wipe').addEventListener('click', function () { $('wipe-yes').hidden = false; });
+  $('wipe-yes').addEventListener('click', function () { try { localStorage.removeItem(KEY); } catch (e) {} setContacts(SAMPLE, true); toast('Contacten gewist van dit apparaat.'); });
+
+  /* ---------- start ---------- */
+  try { var fs = JSON.parse(localStorage.getItem(FKEY) || 'null'); if (fs && (fs.first || fs.last || fs.org)) fields = { first: !!fs.first, last: !!fs.last, org: !!fs.org }; } catch (e) {}
+  syncChips();
+  var stored = null;
+  try { stored = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  if (stored && stored.length) setContacts(stored, false); else setContacts(SAMPLE, true);
+  // meteen typen: veld krijgt altijd de focus, ook bij terugkomen en bij typen naast het veld
+  function grab() { if (document.activeElement !== q) q.focus({ preventScroll: true }); }
+  grab(); setTimeout(grab, 300);
+  window.addEventListener('focus', grab);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) grab(); });
+  document.addEventListener('keydown', function (e) { if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) grab(); });
+  document.addEventListener('click', function (e) { if (!e.target.closest('a,button,input,label,.val')) grab(); });
+})();
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
+</body>
+</html>
