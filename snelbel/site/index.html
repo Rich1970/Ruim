@@ -52,7 +52,7 @@ button, input { font: inherit; color: inherit; }
   background: var(--surface); border: 2px solid var(--line); border-radius: 6px; }
 #q:focus { outline: none; border-color: var(--accent); }
 #q::placeholder { color: var(--muted); font-weight: 400; font-size: 15px; }
-#clear { width: 42px; border: 2px solid var(--line); background: var(--surface); border-radius: 6px; font-size: 20px; cursor: pointer; color: var(--muted); }
+#clear, #sync { width: 42px; border: 2px solid var(--line); background: var(--surface); border-radius: 6px; font-size: 20px; cursor: pointer; color: var(--muted); }
 .meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-bottom: 14px; }
 .meta .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 14px; cursor: pointer; color: var(--muted); }
@@ -89,6 +89,8 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
 .setup p, .setup ol { margin: 0 0 10px; font-size: 14px; color: var(--muted); max-width: 60ch; }
 .setup ol { padding-left: 20px; }
 .setup a { color: var(--accent); }
+#gbox { padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+#sync.busy { opacity: .5; }
 .btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .btn { display: inline-block; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 6px; padding: 11px 16px; font-weight: 600; cursor: pointer; }
 .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 400; }
@@ -103,6 +105,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
     <div class="searchrow">
       <input id="q" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" autofocus placeholder="Typ een letter…" aria-label="Zoek contact">
       <button id="clear" type="button" aria-label="Wis zoekveld" title="Wis">×</button>
+      <button id="sync" type="button" aria-label="Contacten verversen vanuit Google" title="Ververs contacten" hidden>↻</button>
     </div>
   </div>
 </header>
@@ -119,6 +122,15 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
       <button class="chip" type="button" id="f-last" data-f="last" aria-pressed="true">Achternaam</button>
       <button class="chip" type="button" id="f-org" data-f="org" aria-pressed="true">Bedrijf</button>
       <span id="count" aria-live="polite"></span>
+    </div>
+    <div id="gbox" hidden>
+      <h2>Automatisch bijwerken vanuit Google Contacten</h2>
+      <p id="gstate"></p>
+      <div class="btnrow">
+        <button class="btn" type="button" id="gconnect">Koppel Google Contacten</button>
+        <button class="btn ghost" type="button" id="grefresh" hidden>Nu verversen</button>
+        <button class="btn ghost" type="button" id="gunlink" hidden>Ontkoppelen</button>
+      </div>
     </div>
     <h2 id="setup-title">Je eigen contacten inladen</h2>
     <p id="setup-state"></p>
@@ -383,12 +395,80 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
   $('wipe').addEventListener('click', function () { $('wipe-yes').hidden = false; });
   $('wipe-yes').addEventListener('click', function () { try { localStorage.removeItem(KEY); } catch (e) {} setContacts(SAMPLE, true); toast('Contacten gewist van dit apparaat.'); });
 
+  /* ---------- Google Contacten: automatisch bijwerken ---------- */
+  // De app haalt de contacten rechtstreeks bij Google op, zonder tussenserver. Alleen-lezen.
+  var G = { cid: '', scope: 'https://www.googleapis.com/auth/contacts.readonly email', key: 'snelbel.google.v1', every: 6 * 3600e3 };
+  function gGet() { try { return JSON.parse(localStorage.getItem(G.key) || '{}') || {}; } catch (e) { return {}; } }
+  function gSet(o) { var s = gGet(); for (var k in o) s[k] = o[k]; try { localStorage.setItem(G.key, JSON.stringify(s)); } catch (e) {} return s; }
+  function gAuth(silent) {
+    var st = Math.random().toString(36).slice(2) + Date.now().toString(36), s = gSet({ tried: Date.now(), st: st }), E = encodeURIComponent;
+    location.assign('https://accounts.google.com/o/oauth2/v2/auth?client_id=' + E(G.cid) + '&redirect_uri=' + E(location.origin + location.pathname)
+      + '&response_type=token&scope=' + E(G.scope) + '&state=' + st + (silent ? '&prompt=none' : (s.email ? '' : '&prompt=select_account')) + (s.email ? '&login_hint=' + E(s.email) : ''));
+  }
+  function gMap(people) {
+    return people.map(function (p) {
+      var n = (p.names || [])[0] || {}, o = (p.organizations || [])[0] || {}, c = { first: [n.givenName, n.middleName].filter(Boolean).join(' '), last: n.familyName || '', org: o.name || '', phones: [], li: '', mail: ((p.emailAddresses || [])[0] || {}).value || '' };
+      if (!c.first && !c.last && n.displayName) { var parts = n.displayName.split(/\s+/); c.first = parts.shift(); c.last = parts.join(' '); }
+      (p.phoneNumbers || []).forEach(function (t) { if (t.value) c.phones.push({ l: nlLabel(t.type || t.formattedType), v: t.value }); });
+      (p.urls || []).forEach(function (u) { if (!c.li && /linkedin\.com/i.test(u.value || '')) c.li = fixUrl(u.value.trim()); });
+      return c;
+    }).filter(function (c) { return c.phones.length && (c.first || c.last || c.org); });
+  }
+  function gSync(token) {
+    var H = { headers: { Authorization: 'Bearer ' + token } }, all = [];
+    $('sync').classList.add('busy');
+    function page(tok) {
+      return fetch('https://people.googleapis.com/v1/people/me/connections?personFields=names,phoneNumbers,organizations,urls,emailAddresses&pageSize=1000' + (tok ? '&pageToken=' + encodeURIComponent(tok) : ''), H)
+        .then(function (r) { if (!r.ok) throw new Error('google ' + r.status); return r.json(); })
+        .then(function (j) { all = all.concat(j.connections || []); return j.nextPageToken ? page(j.nextPageToken) : null; });
+    }
+    return fetch('https://www.googleapis.com/oauth2/v3/userinfo', H).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })
+      .then(function (u) { if (u.email) gSet({ email: u.email }); return page(''); })
+      .then(function () {
+        var raw = gMap(all);
+        if (!raw.length) throw new Error('leeg');
+        var ok = save(raw); setContacts(raw, false);
+        gSet({ linked: 1, last: Date.now(), n: raw.length, err: '' });
+        toast(raw.length + ' contacten bijgewerkt vanuit Google' + (ok ? '' : '. Opslaan lukte niet.'));
+      })
+      .catch(function (e) { gSet({ err: e.message === 'leeg' ? 'leeg' : 'fetch' }); toast(e.message === 'leeg' ? 'Google gaf geen contacten met telefoonnummer terug.' : 'Bijwerken vanuit Google lukte niet. Je ziet de laatst bewaarde lijst.'); })
+      .then(function () { $('sync').classList.remove('busy'); gRender(); });
+  }
+  function gRender() {
+    var s = gGet(), on = !!s.linked;
+    $('gbox').hidden = false; $('sync').hidden = !on;
+    $('gconnect').hidden = on && !s.err; $('gconnect').textContent = on ? 'Opnieuw koppelen' : 'Koppel Google Contacten';
+    $('grefresh').hidden = !on || !!s.err; $('gunlink').hidden = !on;
+    var when = s.last ? new Date(s.last).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+    $('gstate').textContent = !on ? 'Koppel één keer je Google-account. Daarna haalt Snelbel je contacten vanzelf op, alleen-lezen en rechtstreeks van Google naar dit apparaat.'
+      : s.err === 'login' ? 'Google vraagt je opnieuw in te loggen. Laatst bijgewerkt: ' + when + '.'
+      : (s.email ? s.email + ' · ' : '') + s.n + ' contacten · laatst bijgewerkt ' + when + '. Snelbel ververst vanzelf bij het openen; met ↻ naast het zoekveld doe je het direct.';
+  }
+  function gInit() {
+    var top = true; try { top = window.top === window; } catch (e) { top = false; }
+    if (!G.cid || !top) return;
+    var h = location.hash, s = gGet(), now = Date.now();
+    if (/access_token=|error=/.test(h)) {
+      var P = new URLSearchParams(h.slice(1));
+      history.replaceState(null, '', location.pathname);
+      if (P.get('access_token') && (!s.st || P.get('state') === s.st)) { gSet({ linked: 1 }); gRender(); gSync(P.get('access_token')); return; }
+      if (P.get('error')) { gSet({ err: 'login' }); if (P.get('error') === 'access_denied') toast('Koppelen is afgebroken. Er is niets veranderd.'); }
+    } else if (s.linked && !s.err && navigator.onLine && now - (s.last || 0) > G.every && now - (s.tried || 0) > 30 * 60e3) { gAuth(true); return; }
+    gRender();
+  }
+  $('gconnect').addEventListener('click', function () { gSet({ err: '' }); gAuth(false); });
+  $('grefresh').addEventListener('click', function () { gAuth(true); });
+  $('sync').addEventListener('click', function () { gAuth(true); });
+  $('gunlink').addEventListener('click', function () { try { localStorage.removeItem(G.key); } catch (e) {} gRender(); toast('Google ontkoppeld. De bewaarde contacten blijven staan tot je ze wist.'); });
+  window.snelbelGoogleMap = gMap; // voor testen
+
   /* ---------- start ---------- */
   try { var fs = JSON.parse(localStorage.getItem(FKEY) || 'null'); if (fs && (fs.first || fs.last || fs.org)) fields = { first: !!fs.first, last: !!fs.last, org: !!fs.org }; } catch (e) {}
   syncChips();
   var stored = null;
   try { stored = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
   if (stored && stored.length) setContacts(stored, false); else setContacts(SAMPLE, true);
+  gInit();
   // meteen typen: veld krijgt altijd de focus, ook bij terugkomen en bij typen naast het veld
   function grab() { if (document.activeElement !== q) q.focus({ preventScroll: true }); }
   grab(); setTimeout(grab, 300);
