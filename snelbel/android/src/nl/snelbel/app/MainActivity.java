@@ -31,6 +31,8 @@ public class MainActivity extends Activity {
     private WebView web;
     private boolean pageReady;
     private String pendingCall;
+    private boolean freshSearch;
+    static final String ACTION_SEARCH = "nl.snelbel.app.SEARCH";
 
     @Override
     protected void onCreate(Bundle state) {
@@ -64,11 +66,21 @@ public class MainActivity extends Activity {
         if (!has(Manifest.permission.READ_CONTACTS)) requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, REQ_CONTACTS);
     }
 
+    /** Geopend via de zoekbalk-widget: begin met een leeg zoekveld. */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (ACTION_SEARCH.equals(intent.getAction())) freshSearch = true;
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
         if (pageReady) {
             web.evaluateJavascript("window.snelbelNativeResume&&window.snelbelNativeResume()", null);
+            if (freshSearch) web.evaluateJavascript("window.snelbelNativeFresh&&window.snelbelNativeFresh()", null);
+            freshSearch = false;
             showKeyboard();
         }
     }

@@ -2,6 +2,10 @@
 <resources>
     <color name="bg">#f3f5f8</color>
     <bool name="light_bars">true</bool>
+    <color name="widget_bg">#ffffff</color>
+    <color name="widget_line">#dce1e8</color>
+    <color name="widget_fg">#5d6877</color>
+    <color name="widget_accent">#1257c9</color>
     <style name="Snelbel" parent="@android:style/Theme.DeviceDefault.DayNight">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>

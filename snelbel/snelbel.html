@@ -488,6 +488,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
   }
   window.snelbelNativeReload = function () { if (NATIVE) nLoad(); };
   window.snelbelNativeResume = function () { if (!NATIVE) return; nLoad(); q.focus({ preventScroll: true }); q.select(); };
+  window.snelbelNativeFresh = function () { q.value = ''; open = null; render(); q.focus({ preventScroll: true }); window.scrollTo(0, 0); };
   $('nask').addEventListener('click', function () { if (NATIVE) NATIVE.askContactsAccess(); });
   $('nrefresh').addEventListener('click', function () { if (NATIVE) { nLoad(); toast('Contacten opnieuw ingelezen.'); } });
 

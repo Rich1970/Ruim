@@ -2,4 +2,8 @@
 <resources>
     <color name="bg">#0c1118</color>
     <bool name="light_bars">false</bool>
+    <color name="widget_bg">#151c26</color>
+    <color name="widget_line">#26303d</color>
+    <color name="widget_fg">#93a0b2</color>
+    <color name="widget_accent">#5b9bff</color>
 </resources>
