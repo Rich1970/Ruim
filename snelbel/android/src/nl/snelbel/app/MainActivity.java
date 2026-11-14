@@ -155,6 +155,11 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public String getVersion() {
+            try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return ""; }
+        }
+
+        @JavascriptInterface
         public String getContacts() {
             try { return readContacts().toString(); } catch (Exception e) { return "[]"; }
         }
