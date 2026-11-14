@@ -84,7 +84,9 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
 #tail { padding: 8px 0 0; color: var(--muted); font-size: 13px; }
 #tail:empty { display: none; }
 
-.setup { margin-top: 24px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.setup { margin-top: 24px; padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.setup summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted); padding: 2px 0; }
+.setup[open] summary { margin-bottom: 14px; }
 .setup h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; text-wrap: balance; }
 .setup p, .setup ol { margin: 0 0 10px; font-size: 14px; color: var(--muted); max-width: 60ch; }
 .setup ol { padding-left: 20px; }
@@ -115,7 +117,8 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
   <div id="tail"></div>
   <p id="notice" hidden>Dit zijn voorbeeldcontacten. Laad hieronder je eigen contacten in.</p>
 
-  <section class="setup" id="setup">
+  <details class="setup" id="setup">
+    <summary>Instellingen en contacten bijwerken</summary>
     <div class="meta">
       <span class="lbl">Zoek op</span>
       <button class="chip" type="button" id="f-first" data-f="first" aria-pressed="true">Voornaam</button>
@@ -146,7 +149,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
       <button class="btn ghost" type="button" id="wipe" hidden>Contacten wissen</button>
       <button class="btn ghost" type="button" id="wipe-yes" hidden>Ja, wis alles</button>
     </div>
-  </section>
+  </details>
 </main>
 <div id="toast" role="status" hidden></div>
 
@@ -188,6 +191,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
     contacts = arr.map(prep).sort(function (a, b) { return a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0; });
     isSample = sample;
     $('notice').hidden = !sample;
+    $('setup').open = sample; // met eigen contacten staat het instellingenblok ingeklapt
     $('wipe').hidden = sample; $('wipe-yes').hidden = true;
     $('setup-title').textContent = sample ? 'Je eigen contacten inladen' : 'Contacten bijwerken';
     $('setup-state').textContent = sample ? 'Nu staan er alleen voorbeelden in.' : contacts.length + ' contacten staan op dit apparaat. Een nieuw bestand vervangt de lijst.';
@@ -437,6 +441,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
   function gRender() {
     var s = gGet(), on = !!s.linked;
     $('gbox').hidden = false; $('sync').hidden = !on;
+    if (s.err === 'login') $('setup').open = true;
     $('gconnect').hidden = on && !s.err; $('gconnect').textContent = on ? 'Opnieuw koppelen' : 'Koppel Google Contacten';
     $('grefresh').hidden = !on || !!s.err; $('gunlink').hidden = !on;
     var when = s.last ? new Date(s.last).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
