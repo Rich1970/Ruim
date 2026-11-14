@@ -126,7 +126,15 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
       <span id="count" aria-live="polite"></span>
     </div>
   <details class="setup" id="setup">
-    <summary>Contacten bijwerken en koppeling met Google</summary>
+    <summary id="setup-sum">Contacten bijwerken en koppeling met Google</summary>
+    <div id="nbox" hidden>
+      <h2>Contacten uit je telefoon</h2>
+      <p id="nstate"></p>
+      <div class="btnrow">
+        <button class="btn" type="button" id="nask" hidden>Toegang geven</button>
+        <button class="btn ghost" type="button" id="nrefresh">Nu verversen</button>
+      </div>
+    </div>
     <div id="gbox" hidden>
       <h2>Automatisch bijwerken vanuit Google Contacten</h2>
       <p id="gstate"></p>
@@ -136,6 +144,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
         <button class="btn ghost" type="button" id="gunlink" hidden>Ontkoppelen</button>
       </div>
     </div>
+    <div id="importbox">
     <h2 id="setup-title">Je eigen contacten inladen</h2>
     <p id="setup-state"></p>
     <ol>
@@ -149,6 +158,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
       <input id="file" type="file" accept=".csv,.vcf,text/csv,text/vcard,text/x-vcard" hidden>
       <button class="btn ghost" type="button" id="wipe" hidden>Contacten wissen</button>
       <button class="btn ghost" type="button" id="wipe-yes" hidden>Ja, wis alles</button>
+    </div>
     </div>
   </details>
 </main>
@@ -470,13 +480,36 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
   $('gunlink').addEventListener('click', function () { try { localStorage.removeItem(G.key); } catch (e) {} gRender(); toast('Google ontkoppeld. De bewaarde contacten blijven staan tot je ze wist.'); });
   window.snelbelGoogleMap = gMap; // voor testen
 
+  /* ---------- Android-app: contacten rechtstreeks uit de telefoon ---------- */
+  var NATIVE = window.SnelbelNative || null;
+  function nLoad() {
+    var raw = [], ok = false;
+    try { ok = NATIVE.hasContactsAccess(); if (ok) raw = JSON.parse(NATIVE.getContacts()) || []; } catch (e) { raw = []; }
+    $('nbox').hidden = false; $('importbox').hidden = true; $('nask').hidden = ok;
+    $('setup-sum').textContent = 'Contacten uit je telefoon';
+    if (raw.length) {
+      setContacts(raw, false);
+      $('nstate').textContent = raw.length + ' contacten met telefoonnummer, rechtstreeks uit het adresboek van je telefoon. Snelbel leest ze bij elke keer openen opnieuw in.';
+    } else {
+      setContacts(SAMPLE, true);
+      $('notice').textContent = ok ? 'Er staan geen contacten met telefoonnummer op deze telefoon. Dit zijn voorbeelden.' : 'Dit zijn voorbeelden. Geef Snelbel hieronder toegang tot je contacten.';
+      $('nstate').textContent = ok ? 'Geen contacten met telefoonnummer gevonden.' : 'Snelbel heeft toegang tot je contacten nodig. Ze blijven op je telefoon: de app heeft geen internettoegang.';
+      $('setup').open = true;
+    }
+    $('wipe').hidden = true;
+  }
+  window.snelbelNativeReload = function () { if (NATIVE) nLoad(); };
+  window.snelbelNativeResume = function () { if (!NATIVE) return; nLoad(); q.focus({ preventScroll: true }); q.select(); };
+  $('nask').addEventListener('click', function () { if (NATIVE) NATIVE.askContactsAccess(); });
+  $('nrefresh').addEventListener('click', function () { if (NATIVE) { nLoad(); toast('Contacten opnieuw ingelezen.'); } });
+
   /* ---------- start ---------- */
   try { var fs = JSON.parse(localStorage.getItem(FKEY) || 'null'); if (fs && (fs.first || fs.last || fs.org)) fields = { first: !!fs.first, last: !!fs.last, org: !!fs.org }; } catch (e) {}
   syncChips();
   var stored = null;
   try { stored = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
-  if (stored && stored.length) setContacts(stored, false); else setContacts(SAMPLE, true);
-  gInit();
+  if (NATIVE) nLoad();
+  else { if (stored && stored.length) setContacts(stored, false); else setContacts(SAMPLE, true); gInit(); }
   // meteen typen: veld krijgt altijd de focus, ook bij terugkomen en bij typen naast het veld
   function grab() {
     if (document.activeElement !== q) q.focus({ preventScroll: true });
