@@ -1,5 +1,5 @@
 // Snelbel werkt ook zonder internet: eerst het netwerk proberen, anders de bewaarde kopie.
-var C = 'snelbel-v4';
+var C = 'snelbel-v5';
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(C).then(function (c) { return c.addAll(['./', 'manifest.webmanifest', 'icon-192.png']); })); self.skipWaiting(); });
 self.addEventListener('activate', function (e) { e.waitUntil(self.clients.claim()); });
 self.addEventListener('fetch', function (e) {

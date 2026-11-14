@@ -54,7 +54,8 @@ main.wrap { padding-block: 0 24px; }
 #notice { margin: 0; padding: 8px 0 0; font-size: 13px; color: var(--muted); }
 #list { list-style: none; margin: 0; padding: 0; }
 .row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); }
-.who { flex: 1; min-width: 0; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.who { flex: 1; min-width: 0; display: block; padding: 2px 0; text-align: left; cursor: pointer; color: inherit; text-decoration: none; }
+.morebtn { flex: none; height: 30px; min-width: 34px; padding: 0 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
 .name { font-size: 15px; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
 .sub { font-size: 12px; line-height: 1.25; color: var(--muted); overflow-wrap: anywhere; }
 .sub .num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
@@ -235,11 +236,13 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
     var m = c.main, sub = [];
     if (c.org && c.name !== c.org) sub.push(hl(c.org, terms, fields.org));
     if (m) sub.push('<span class="num">' + esc(m.v) + '</span>');
-    var extra = (c.phones.length > 1) ? ' <span aria-hidden="true">+' + (c.phones.length - 1) + '</span>' : '';
     var nameHtml = (c.first || c.last)
       ? [hl(c.first, terms, fields.first), hl(c.last, terms, fields.last)].filter(Boolean).join(' ')
       : hl(c.name, terms, fields.org);
-    var h = '<li><div class="row"><button type="button" class="who" data-i="' + i + '" aria-expanded="' + (open === i) + '"><div class="name">' + nameHtml + '</div><div class="sub">' + sub.join(' · ') + extra + '</div></button><div class="acts">';
+    // tik op naam of nummer belt direct het hoofdnummer; het knopje +N toont de andere nummers
+    var h = '<li><div class="row"><a class="who"' + (m ? ' href="tel:' + esc(telNum(m.v)) + '"' : '') + ' aria-label="Bel ' + esc(c.name) + '"><div class="name">' + nameHtml + '</div><div class="sub">' + sub.join(' · ') + '</div></a>'
+      + (c.phones.length > 1 ? '<button type="button" class="morebtn" data-i="' + i + '" aria-expanded="' + (open === i) + '" aria-label="Toon alle nummers van ' + esc(c.name) + '" title="Alle nummers">+' + (c.phones.length - 1) + '</button>' : '')
+      + '<div class="acts">';
     h += m ? '<a class="act call" href="tel:' + esc(telNum(m.v)) + '" aria-label="Bel ' + esc(c.name) + '" title="Bel">' + IC_CALL + '</a>'
            + '<a class="act wa" href="https://wa.me/' + waNum(m.v) + '" target="_blank" rel="noopener" aria-label="WhatsApp ' + esc(c.name) + '" title="WhatsApp">' + IC_WA + '</a>'
            : '<span class="act off"></span><span class="act off"></span>';
@@ -375,7 +378,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
       (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () { toast('Gekopieerd: ' + v); }, function () { toast('Kopiëren lukte niet. Houd het nummer ingedrukt om het te selecteren.'); });
       return;
     }
-    var w = e.target.closest('.who');
+    var w = e.target.closest('.morebtn');
     if (w) { var i = +w.dataset.i; open = open === i ? null : i; render(); }
   });
   $('file').addEventListener('change', function (e) {
@@ -464,11 +467,16 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
   if (stored && stored.length) setContacts(stored, false); else setContacts(SAMPLE, true);
   gInit();
   // meteen typen: veld krijgt altijd de focus, ook bij terugkomen en bij typen naast het veld
-  function grab() { if (document.activeElement !== q) q.focus({ preventScroll: true }); }
+  function grab() {
+    if (document.activeElement !== q) q.focus({ preventScroll: true });
+    try { if (navigator.virtualKeyboard && navigator.virtualKeyboard.show) navigator.virtualKeyboard.show(); } catch (e) {}
+  }
   grab(); setTimeout(grab, 300);
   window.addEventListener('focus', grab);
-  document.addEventListener('visibilitychange', function () { if (!document.hidden) grab(); });
+  // terug in de app (bijv. na een gesprek): vorige zoekletters geselecteerd, zodat typen ze meteen vervangt
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) { grab(); q.select(); } });
+  document.addEventListener('touchend', function (e) { if (!e.target.closest('a,button,input,label,summary,.val')) grab(); });
   document.addEventListener('keydown', function (e) { if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) grab(); });
-  document.addEventListener('click', function (e) { if (!e.target.closest('a,button,input,label,.val')) grab(); });
+  document.addEventListener('click', function (e) { if (!e.target.closest('a,button,input,label,summary,.val')) grab(); });
 })();
 </script>
