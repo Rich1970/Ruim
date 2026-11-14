@@ -44,11 +44,11 @@ button, input { font: inherit; color: inherit; }
 #q:focus { outline: none; border-color: var(--accent); }
 #q::placeholder { color: var(--muted); font-weight: 400; font-size: 15px; }
 #clear, #sync { width: 42px; border: 2px solid var(--line); background: var(--surface); border-radius: 6px; font-size: 20px; cursor: pointer; color: var(--muted); }
-.meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: 20px; }
+.meta { display: flex; flex-wrap: nowrap; gap: 6px; align-items: center; margin-top: 20px; }
 .meta .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
-.chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 14px; cursor: pointer; color: var(--muted); }
+.chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 4px 10px; font-size: 13px; white-space: nowrap; cursor: pointer; color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-#count { margin-left: auto; font-family: var(--font-data); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+#count { margin-left: auto; white-space: nowrap; font-family: var(--font-data); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 main.wrap { padding-block: 0 24px; }
 #notice { margin: 0; padding: 8px 0 0; font-size: 13px; color: var(--muted); }
@@ -107,8 +107,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
   <div id="tail"></div>
   <p id="notice" hidden>Dit zijn voorbeeldcontacten. Laad hieronder je eigen contacten in.</p>
 
-  <div class="meta">
-      <span class="lbl">Zoek op</span>
+  <div class="meta" role="group" aria-label="Zoek op">
       <button class="chip" type="button" id="f-first" data-f="first" aria-pressed="true">Voornaam</button>
       <button class="chip" type="button" id="f-last" data-f="last" aria-pressed="true">Achternaam</button>
       <button class="chip" type="button" id="f-org" data-f="org" aria-pressed="true">Bedrijf</button>
