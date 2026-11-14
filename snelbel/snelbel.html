@@ -386,7 +386,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
 
   /* ---------- Google Contacten: automatisch bijwerken ---------- */
   // De app haalt de contacten rechtstreeks bij Google op, zonder tussenserver. Alleen-lezen.
-  var G = { cid: '', scope: 'https://www.googleapis.com/auth/contacts.readonly email', key: 'snelbel.google.v1', every: 6 * 3600e3 };
+  var G = { cid: '644822159627-91nir939lseq39r0hk7bu8p5ror37orr.apps.googleusercontent.com', scope: 'https://www.googleapis.com/auth/contacts.readonly email', key: 'snelbel.google.v1', every: 6 * 3600e3 };
   function gGet() { try { return JSON.parse(localStorage.getItem(G.key) || '{}') || {}; } catch (e) { return {}; } }
   function gSet(o) { var s = gGet(); for (var k in o) s[k] = o[k]; try { localStorage.setItem(G.key, JSON.stringify(s)); } catch (e) {} return s; }
   function gAuth(silent) {
