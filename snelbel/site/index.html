@@ -53,7 +53,7 @@ button, input { font: inherit; color: inherit; }
 #q:focus { outline: none; border-color: var(--accent); }
 #q::placeholder { color: var(--muted); font-weight: 400; font-size: 15px; }
 #clear, #sync { width: 42px; border: 2px solid var(--line); background: var(--surface); border-radius: 6px; font-size: 20px; cursor: pointer; color: var(--muted); }
-.meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-bottom: 14px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: 20px; }
 .meta .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 14px; cursor: pointer; color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
@@ -84,7 +84,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
 #tail { padding: 8px 0 0; color: var(--muted); font-size: 13px; }
 #tail:empty { display: none; }
 
-.setup { margin-top: 24px; padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.setup { margin-top: 10px; padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 .setup summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted); padding: 2px 0; }
 .setup[open] summary { margin-bottom: 14px; }
 .setup h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; text-wrap: balance; }
@@ -117,15 +117,15 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
   <div id="tail"></div>
   <p id="notice" hidden>Dit zijn voorbeeldcontacten. Laad hieronder je eigen contacten in.</p>
 
-  <details class="setup" id="setup">
-    <summary>Instellingen en contacten bijwerken</summary>
-    <div class="meta">
+  <div class="meta">
       <span class="lbl">Zoek op</span>
       <button class="chip" type="button" id="f-first" data-f="first" aria-pressed="true">Voornaam</button>
       <button class="chip" type="button" id="f-last" data-f="last" aria-pressed="true">Achternaam</button>
       <button class="chip" type="button" id="f-org" data-f="org" aria-pressed="true">Bedrijf</button>
       <span id="count" aria-live="polite"></span>
     </div>
+  <details class="setup" id="setup">
+    <summary>Contacten bijwerken en koppeling met Google</summary>
     <div id="gbox" hidden>
       <h2>Automatisch bijwerken vanuit Google Contacten</h2>
       <p id="gstate"></p>
