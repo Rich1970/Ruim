@@ -495,6 +495,7 @@ mark { background: var(--hit); color: inherit; font-weight: 600; border-radius: 
       $('nstate').textContent = ok ? 'Geen contacten met telefoonnummer gevonden.' : 'Snelbel heeft toegang tot je contacten nodig. Ze blijven op je telefoon: de app heeft geen internettoegang.';
       $('setup').open = true;
     }
+    try { $('nstate').textContent += ' App-versie ' + NATIVE.getVersion() + '.'; } catch (e) {}
     $('wipe').hidden = true;
   }
   window.snelbelNativeReload = function () { if (NATIVE) nLoad(); };
